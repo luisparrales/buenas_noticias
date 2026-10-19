@@ -1,6 +1,6 @@
 # Buenos Días, Buenas Noticias — POC
 
-Servicio basado en Python con el framework Flask que recibe un parámetro `user_id`, busca el perfil y su categoría preferida en CSV, consulta GNews, y envía a través de SMTP, un correo d euna notiia que coincida con sus preferencias.
+Servicio basado en Python con el framework Flask que recibe un parámetro `user_id`, busca el perfil y su categoría preferida en CSV, consulta GNews, y envía a través de SMTP, un correo de una noticia que coincida con sus preferencias.
 
 ## Requisitos
 
