@@ -45,6 +45,9 @@ Instala dependencias y configura variables:
 pip install -r requirements.txt
 ```
 
+Renombra el archivo `.env.example` a `.env` y completa en él los valores de los parámetros.
+
+
 Ejecuta:
 ```bash
 python app.py
