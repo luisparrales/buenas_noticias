@@ -3,7 +3,6 @@ import requests
 
 class GNewsClient:
     BASE_URL = "https://gnews.io/api/v4/search"
-
     def __init__(self, api_key, language="es", country="mx", max_results=10, timeout=15):
         self.api_key = api_key
         self.language = language

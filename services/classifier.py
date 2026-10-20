@@ -1,42 +1,43 @@
-import re
-import unicodedata
-#Determinar la naturaleza de los términos de la noticia, si es positiva o negativa, para poder enviar solo noticias positivas a los usuarios.
-NEGATIVE_TERMS = {
-    "asesinato", "asesinatos", "muerto", "muertos", "muere", "murió", "muerte",
-    "tragedia", "trágico", "accidente", "accidentes", "heridos", "herido",
-    "violencia", "violento", "guerra", "ataque", "atentado", "terrorismo",
-    "tiroteo", "crimen", "delito", "desastre", "incendio", "inundación",
-    "terremoto", "huracán", "víctimas", "crisis", "alarma", "pánico",
-    "fraude", "corrupción", "detenido", "detenidos", "deportación", "colapso",
-    "amenaza", "amenazas", "grave", "graves", "hospitalizado", "hospitalizados",
-}
-POSITIVE_TERMS = {
-    "éxito", "exito", "logra", "logran", "logró", "lograron", "descubre",
-    "descubren", "descubrimiento", "avance", "innovación", "innovacion",
-    "premio", "premiada", "premiado", "ayuda", "ayudan", "salva", "salvan",
-    "mejora", "mejoran", "esperanza", "protege", "protección", "proteccion",
-    "recuperación", "recuperacion", "crece", "crecimiento", "récord", "record",
-    "reforesta", "restauración", "restauracion", "cura", "curan", "beneficio",
-    "beneficia", "solidaridad", "donación", "donacion", "victoria", "ganan",
-    "ganó", "ganaron", "inspirador", "inspiradora", "positivo", "positiva",
-}
+from google import genai
+from google.genai import types
+from pydantic import BaseModel
+from config import Config
 
+client = genai.Client(api_key=Config.GEMINI_API_KEY)
 
-def normalize(text):
-    text = unicodedata.normalize("NFKD", text.lower())
-    return "".join(ch for ch in text if not unicodedata.combining(ch))
+class NewsSentiment(BaseModel):
+    is_positive: bool
 
+def is_positive_news(article: dict) -> bool:
+    title = article.get("title", "")
+    description = article.get("description", "")
+    text = f"Título: {title}\nDescripción: {description}"
 
-def is_positive_news(article):
-    text = normalize(" ".join([
-        article.get("title", ""),
-        article.get("description", ""),
-    ]))
-    words = set(re.findall(r"\b[\w'-]+\b", text))
+    system_instruction = (
+        "Eres un clasificador de noticias estricto. "
+        "Analiza el texto proporcionado y determina si la noticia es buena o positiva"
+        "(ej. logros, descubrimientos, solidaridad, avances ) "
+        "o negativa/mala noticia (ej. crímenes, accidentes, violencia, desastres, crisis). "
+        "Si la noticia es mixta, neutral o sobre tragedia/conflicto, clasifícala como negativa (false)."
+    )
 
-    negative = {normalize(term) for term in NEGATIVE_TERMS}
-    positive = {normalize(term) for term in POSITIVE_TERMS}
+    try:
+        response = client.models.generate_content(
+            model="gemini-3.8-flash",
+            contents=text,
+            config=types.GenerateContentConfig(
+                system_instruction=system_instruction,
+                response_mime_type="application/json",
+                response_schema=NewsSentiment,
+                temperature=0.0,
+            ),
+        )
+        
+        result = NewsSentiment.model_validate_json(response.text)
+        print(f"Clasificación de noticia: {result.is_positive} para el artículo: {title}")
+        return result.is_positive
 
-    if words & negative:
+    except Exception as e:
+        print(f"Error al consultar la API: {e}")
         return False
-    return bool(words & positive)
+

@@ -18,6 +18,7 @@ class Config:
     USERS_CSV = os.getenv("USERS_CSV", str(BASE_DIR / "data" / "users.csv"))
     PREFERENCES_CSV = os.getenv("PREFERENCES_CSV", str(BASE_DIR / "data" / "preferences.csv"))
 
+    GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
     GNEWS_API_KEY = os.getenv("GNEWS_API_KEY", "")
     NEWS_LANGUAGE = os.getenv("NEWS_LANGUAGE", "es")
     NEWS_COUNTRY = os.getenv("NEWS_COUNTRY", "mx")
